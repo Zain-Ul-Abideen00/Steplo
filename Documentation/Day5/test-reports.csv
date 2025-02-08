@@ -1,0 +1,11 @@
+Test Case ID,Description,Steps,Expected Result,Actual Result,Status,Severity,Assigned To,Remarks
+FT001,Product Listing Load,1. Navigate to home page 2. Wait for product grid to load,Product grid should display with items and skeleton loading,Products load with skeleton state while fetching,Passed,High,Developer,Optimized with proper loading states
+FT002,Product Search,1. Click search bar 2. Type product name 3. Wait for results,Results should filter in real-time with debouncing,Search works with 300ms debounce,Passed,High,Developer,Added caching for better performance
+FT003,Product Filtering,1. Click category filter 2. Select category,Products should filter by selected category,Category filtering works as expected,Passed,Medium,Developer,Added loading state during filter
+SEC001,Authentication Flow,1. Click login 2. Enter credentials 3. Submit,User should be authenticated and redirected,Authentication works with proper error handling,Passed,Critical,Developer,Added additional security measures
+PERF001,Image Optimization,1. Load product images 2. Check network tab,Images should be optimized and cached,Images are properly optimized and cached,Passed,High,Developer,Implemented next/image with proper sizing
+UI001,Mobile Responsiveness,1. Test on various devices 2. Check layouts,UI should be consistent across devices,UI adapts properly to all tested devices,Passed,High,Developer,Fixed minor iOS issues
+API001,API Error Handling,1. Simulate offline state 2. Make API request,Should show proper error message with retry option,Error handling works with retry mechanism,Passed,High,Developer,Added global error boundary
+PERF002,Bundle Size,1. Run build 2. Check bundle analyzer,Bundle size should be under 400KB,Bundle size reduced to 380KB,Passed,Medium,Developer,Implemented code splitting
+SEC002,XSS Prevention,1. Test input fields 2. Try script injection,Should sanitize all inputs,All inputs are properly sanitized,Passed,Critical,Developer,Added additional sanitization
+UI002,Loading States,1. Check all loading states 2. Verify UX,Should show proper loading indicators,Skeleton loading implemented properly,Passed,Medium,Developer,Enhanced user experience 
