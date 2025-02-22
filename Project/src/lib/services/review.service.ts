@@ -75,7 +75,19 @@ export const reviewService = {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return data || [];
+
+    // Transform the image paths into full URLs
+    const reviewsWithUrls = data?.map(review => ({
+      ...review,
+      images: review.images?.map((imagePath: string) => {
+        const { data: { publicUrl } } = supabase.storage
+          .from("reviews")
+          .getPublicUrl(imagePath);
+        return publicUrl;
+      })
+    })) || [];
+
+    return reviewsWithUrls;
   },
 
   async getAverageRating(productId: string): Promise<number> {

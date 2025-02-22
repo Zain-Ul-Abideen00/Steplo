@@ -6,10 +6,12 @@ import { useCartStore } from "@/store/cartStore";
 import { QuantitySelector } from "./quantity-selector";
 import { CartItemProps, Product } from "@/types/product";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
 import { cartService } from "@/lib/services/cart.service";
 import { useState } from "react";
 import { useWishlist } from "@/context/WishlistContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { fadeInUp } from "@/lib/animation-variants";
+import { toastService } from "@/lib/services/toast.service";
 
 export default function CartItem({ item }: CartItemProps) {
   const { updateQuantity, removeItem, addItem } = useCartStore();
@@ -27,17 +29,9 @@ export default function CartItem({ item }: CartItemProps) {
       }
       // Then update local state
       await updateQuantity(item.productId, newQuantity, user);
-      toast.success("Quantity updated", {
-        description: `${item.name} quantity increased to ${newQuantity}`,
-        action: {
-          label: "Undo",
-          onClick: () => handleDecrease(),
-        },
-      });
+      toastService.cart.updated(item.name, newQuantity, handleDecrease);
     } catch (err) {
-      toast.error("Update failed", {
-        description: "Could not update item quantity. Please try again.",
-      });
+      toastService.error.action("update item quantity");
       console.log(err);
     } finally {
       setLoading(false);
@@ -54,17 +48,9 @@ export default function CartItem({ item }: CartItemProps) {
         await cartService.updateCartItem(user.id, item.productId, newQuantity);
       }
       await updateQuantity(item.productId, newQuantity, user);
-      toast.success("Quantity updated", {
-        description: `${item.name} quantity decreased to ${newQuantity}`,
-        action: {
-          label: "Undo",
-          onClick: () => handleIncrease(),
-        },
-      });
+      toastService.cart.updated(item.name, newQuantity, handleIncrease);
     } catch (err) {
-      toast.error("Update failed", {
-        description: "Could not update item quantity. Please try again.",
-      });
+      toastService.error.action("update item quantity");
       console.log(err);
     } finally {
       setLoading(false);
@@ -80,35 +66,23 @@ export default function CartItem({ item }: CartItemProps) {
       }
       // Then remove from local state
       await removeItem(item.productId, user);
-      toast.success("Item removed", {
-        description: `${item.name} has been removed from your cart`,
-        action: {
-          label: "Undo",
-          onClick: async () => {
-            try {
-              await addItem(
-                {
-                  ...item,
-                  quantity: 1,
-                },
-                user
-              );
-              toast.success("Item restored", {
-                description: `${item.name} has been added back to your cart`,
-              });
-            } catch (err) {
-              toast.error("Restore failed", {
-                description: "Could not restore item. Please try again.",
-              });
-              console.log(err);
-            }
-          },
-        },
+      toastService.cart.removed(item.name, async () => {
+        try {
+          await addItem(
+            {
+              ...item,
+              quantity: 1,
+            },
+            user
+          );
+          toastService.cart.added(item.name);
+        } catch (err) {
+          toastService.error.action("restore item");
+          console.log(err);
+        }
       });
     } catch (err) {
-      toast.error("Remove failed", {
-        description: "Could not remove item. Please try again.",
-      });
+      toastService.error.action("remove item");
       console.log(err);
     } finally {
       setLoading(false);
@@ -117,15 +91,8 @@ export default function CartItem({ item }: CartItemProps) {
 
   const handleWishlistToggle = async () => {
     if (!user) {
-      toast.error("Sign in required", {
-        description: "Please sign in to save items to your wishlist",
-        action: {
-          label: "Sign In",
-          onClick: () => {
-            // Add your sign-in navigation logic here
-            window.location.href = "/login";
-          },
-        },
+      toastService.auth.signInRequired(() => {
+        window.location.href = "/login";
       });
       return;
     }
@@ -133,20 +100,14 @@ export default function CartItem({ item }: CartItemProps) {
     try {
       if (isInWishlist(item.productId)) {
         await removeFromWishlist(item.productId);
-        toast.success("Removed from wishlist", {
-          description: `${item.name} has been removed from your wishlist`,
-          action: {
-            label: "Undo",
-            onClick: async () => {
-              const wishlistItem = {
-                _id: item.productId,
-                name: item.name,
-                price: item.price,
-                imageUrl: item.image,
-              };
-              await addToWishlist(item.productId, wishlistItem as Product);
-            },
-          },
+        toastService.wishlist.removed(item.name, async () => {
+          const wishlistItem = {
+            _id: item.productId,
+            name: item.name,
+            price: item.price,
+            imageUrl: item.image,
+          };
+          await addToWishlist(item.productId, wishlistItem as Product);
         });
       } else {
         const wishlistItem = {
@@ -156,67 +117,83 @@ export default function CartItem({ item }: CartItemProps) {
           imageUrl: item.image,
         };
         await addToWishlist(item.productId, wishlistItem as Product);
-        toast.success("Added to wishlist", {
-          description: `${item.name} has been saved to your wishlist`,
-          action: {
-            label: "View Wishlist",
-            onClick: () => {
-              window.location.href = "/wishlist";
-            },
-          },
+        toastService.wishlist.added(item.name, () => {
+          window.location.href = "/wishlist";
         });
       }
     } catch (err) {
-      toast.error("Action failed", {
-        description: "Could not update wishlist. Please try again.",
-      });
+      toastService.error.action("update wishlist");
       console.log(err);
     }
   };
 
   return (
-    <div className={`flex gap-4 py-6 ${loading ? "opacity-50" : ""}`}>
-      <div className="relative h-24 w-24 flex-shrink-0">
-        {item.image && (
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover"
-          />
-        )}
-      </div>
+    <AnimatePresence mode="popLayout">
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        className={`flex gap-4 py-6 ${loading ? "opacity-50" : ""}`}
+      >
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          className="relative h-24 w-24 flex-shrink-0"
+        >
+          {item.image && (
+            <Image
+              src={item.image}
+              alt={item.name}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+            />
+          )}
+        </motion.div>
 
-      <div className="flex flex-1 flex-col">
-        <div className="flex justify-between">
-          <div className="space-y-1">
-            <h3 className="text-sm font-medium">{item.name}</h3>
-            {item.size && (
-              <p className="text-sm text-muted-foreground">Size: {item.size}</p>
-            )}
-            <p className="text-sm text-muted-foreground">Rs {item.price}</p>
+        <motion.div
+          variants={fadeInUp}
+          className="flex flex-1 flex-col"
+        >
+          <div className="flex justify-between">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-1"
+            >
+              <h3 className="text-sm font-medium">{item.name}</h3>
+              {item.size && (
+                <p className="text-sm text-muted-foreground">Size: {item.size}</p>
+              )}
+              <p className="text-sm text-muted-foreground">Rs {item.price}</p>
+            </motion.div>
+
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleWishlistToggle}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Heart
+                className={`h-5 w-5 ${isInWishlist(item.productId) ? "fill-red-500 text-red-500" : ""}`}
+              />
+            </motion.button>
           </div>
 
-          <button
-            onClick={handleWishlistToggle}
-            className="text-muted-foreground hover:text-foreground"
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mt-4"
           >
-            <Heart
-              className={`h-5 w-5 ${isInWishlist(item.productId) ? "fill-red-500 text-red-500" : ""}`}
+            <QuantitySelector
+              quantity={item.quantity}
+              onIncrease={handleIncrease}
+              onDecrease={handleDecrease}
+              onRemove={handleRemove}
             />
-          </button>
-        </div>
-
-        <div className="mt-4">
-          <QuantitySelector
-            quantity={item.quantity}
-            onIncrease={handleIncrease}
-            onDecrease={handleDecrease}
-            onRemove={handleRemove}
-          />
-        </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

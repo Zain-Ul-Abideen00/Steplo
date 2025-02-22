@@ -87,7 +87,10 @@ export class ShippingService {
         );
       }
 
-      return transaction;
+      return {
+        ...transaction,
+        trackingUrlProvider: transaction.trackingUrlProvider
+      };
     } catch (error) {
       console.error("Label creation error:", error);
       throw error;

@@ -33,6 +33,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import Link from "next/link";
 
 interface RatingDistribution {
   [key: string]: number;
@@ -211,14 +212,7 @@ export function ReviewSection({ productId }: ReviewSectionProps) {
 
   const handleLikeClick = async (reviewId: string) => {
     if (!user) {
-      toast.error("Please sign in to like reviews", {
-        action: {
-          label: "Sign In",
-          onClick: () => {
-            /* Add your sign-in navigation */
-          },
-        },
-      });
+      toast.error("Please sign in to like reviews");
       return;
     }
 
@@ -317,7 +311,7 @@ export function ReviewSection({ productId }: ReviewSectionProps) {
         <TabsContent value="reviews" className="space-y-8 mt-6">
           {/* Rating Summary Card */}
           <div className="bg-white rounded-lg border p-6">
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid gap-8">
               <div className="space-y-4">
                 <div className="flex items-baseline gap-3">
                   <span className="text-4xl font-bold">{averageRating}</span>
@@ -456,23 +450,11 @@ export function ReviewSection({ productId }: ReviewSectionProps) {
                     </DialogContent>
                   </Dialog>
                 ) : (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      toast.error("Please sign in", {
-                        description:
-                          "You need to be signed in to write a review",
-                        action: {
-                          label: "Sign In",
-                          onClick: () => {
-                            /* Add sign-in navigation */
-                          },
-                        },
-                      });
-                    }}
-                  >
-                    Sign in to Review
-                  </Button>
+                  <Link href="/login">
+                    <Button variant="outline">
+                      Sign in to Review
+                    </Button>
+                  </Link>
                 )}
               </div>
             </div>

@@ -11,6 +11,14 @@ import {
 import { ProductCard } from "../products/ProductCard";
 import { getProducts } from "@/lib/sanity.queries";
 import { Product } from "@/types/product";
+import { motion } from "framer-motion";
+import { Loading } from "../ui/loading";
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5 }
+};
 
 export const GearUp = () => {
   const [menProducts, setMenProducts] = useState<Product[]>([]);
@@ -21,10 +29,8 @@ export const GearUp = () => {
     const fetchProducts = async () => {
       try {
         setIsLoading(true);
-        // Fetch all products from Sanity
         const products = await getProducts();
 
-        // Filter products for men's tops and shorts
         const mensProducts = products
           .filter((product: Product) => {
             const category = product.category.toLowerCase();
@@ -35,16 +41,14 @@ export const GearUp = () => {
           })
           .slice(0, 6);
 
-        // Filter products for women's tops and shorts
         const womensProducts = products
           .filter(
             (product: Product) =>
               product.category.toLowerCase().includes("womens-top") ||
               product.category.toLowerCase().includes("womens-shorts")
           )
-          .slice(0, 6); // Limit to 6 products
+          .slice(0, 6);
 
-        // Sort to group tops and shorts together
         const sortedMensProducts = [...mensProducts].sort((a, b) =>
           a.category.localeCompare(b.category)
         );
@@ -66,18 +70,38 @@ export const GearUp = () => {
   }, []);
 
   if (isLoading) {
-    return <div>Loading...</div>; // Consider adding a proper loading skeleton
+    return (
+      <div className="mx-auto px-5 sm:px-10 mb-8 sm:mb-16 space-y-4">
+        <Loading variant="productGrid" count={4} />
+      </div>
+    );
   }
 
   return (
-    <section className="mx-auto px-5 sm:px-10 mb-8 sm:mb-16">
-      <h2 className="text-xl sm:text-[24px] text-[#111111] font-medium mb-4 sm:mb-[25px]">
-        Gear Up
-      </h2>
+    <motion.section
+      initial="initial"
+      whileInView="animate"
+      viewport={{ once: true }}
+      variants={fadeInUp}
+      className="mx-auto px-5 sm:px-10 mb-8 sm:mb-16"
+    >
+      <div className="flex items-center justify-between mb-8">
+        <motion.h2
+          variants={fadeInUp}
+          className="text-2xl sm:text-3xl text-[#111111] font-semibold"
+        >
+          Gear Up
+        </motion.h2>
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-[4%]">
         {/* Men's Section */}
-        <div className="w-full lg:w-[666px]">
+        <motion.div
+          className={`w-full lg:w-[666px] transition-opacity duration-500 `}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <Carousel
             opts={{
               align: "start",
@@ -86,10 +110,10 @@ export const GearUp = () => {
             className="w-full"
           >
             <div className="flex justify-between items-center mb-4">
-              <span className="text-sm sm:text-[16px]">Shop Men&apos;s</span>
+              <span className="text-base sm:text-lg font-medium">Shop Men&apos;s</span>
               <div className="flex gap-3">
-                <CarouselPrevious className="static w-12 h-12 rounded-full bg-[#E5E5E5] hover:bg-[#D4D4D4] translate-y-0" />
-                <CarouselNext className="static w-12 h-12 rounded-full bg-[#E5E5E5] hover:bg-[#D4D4D4] translate-y-0" />
+                <CarouselPrevious className="static w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-300 translate-y-0" />
+                <CarouselNext className="static w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-300 translate-y-0" />
               </div>
             </div>
 
@@ -99,15 +123,25 @@ export const GearUp = () => {
                   key={product._id}
                   className="pl-2 sm:pl-4 basis-full sm:basis-1/2"
                 >
-                  <ProductCard product={product} />
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
                 </CarouselItem>
               ))}
             </CarouselContent>
           </Carousel>
-        </div>
+        </motion.div>
 
         {/* Women's Section */}
-        <div className="w-full lg:w-[666px]">
+        <motion.div
+          className={`w-full lg:w-[666px] transition-opacity duration-500`}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <Carousel
             opts={{
               align: "start",
@@ -116,10 +150,10 @@ export const GearUp = () => {
             className="w-full"
           >
             <div className="flex justify-between items-center mb-4">
-              <span className="text-sm sm:text-[16px]">Shop Women&apos;s</span>
+              <span className="text-base sm:text-lg font-medium">Shop Women&apos;s</span>
               <div className="flex gap-3">
-                <CarouselPrevious className="static w-12 h-12 rounded-full bg-[#E5E5E5] hover:bg-[#D4D4D4] translate-y-0" />
-                <CarouselNext className="static w-12 h-12 rounded-full bg-[#E5E5E5] hover:bg-[#D4D4D4] translate-y-0" />
+                <CarouselPrevious className="static w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-300 translate-y-0" />
+                <CarouselNext className="static w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-300 translate-y-0" />
               </div>
             </div>
 
@@ -129,13 +163,18 @@ export const GearUp = () => {
                   key={product._id}
                   className="pl-2 sm:pl-4 basis-full sm:basis-1/2"
                 >
-                  <ProductCard product={product} />
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
                 </CarouselItem>
               ))}
             </CarouselContent>
           </Carousel>
-        </div>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 };

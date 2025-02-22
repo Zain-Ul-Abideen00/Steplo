@@ -27,7 +27,6 @@ import {
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { COUNTRIES, US_STATES } from "@/lib/constants";
-import { Icons } from "../icons";
 
 interface AddressFormProps {
   onSubmit: (data: ShippingFormValues) => void;
@@ -314,10 +313,7 @@ export function AddressForm({
           className="w-full"
           disabled={!form.formState.isValid || form.formState.isSubmitting}
         >
-          {form.formState.isSubmitting && (
-            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-          )}
-          Continue to Payment
+          Get Shipping Rates
         </Button>
       </form>
     </Form>

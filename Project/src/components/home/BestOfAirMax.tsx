@@ -10,7 +10,7 @@ import {
 import { ProductCard } from "@/components/products/ProductCard";
 import { getProducts } from "@/lib/sanity.queries";
 import { Product } from "@/types/product";
-import { ProductCardSkeleton } from "@/components/products/ProductCardSkeleton";
+import { Loading } from "../ui/loading";
 
 export const BestOfAirMax = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -83,7 +83,7 @@ export const BestOfAirMax = () => {
                       key={index}
                       className="pl-3 sm:pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
                     >
-                      <ProductCardSkeleton />
+                      <Loading variant="productCard" />
                     </CarouselItem>
                   ))
               : products.map((product: Product) => (

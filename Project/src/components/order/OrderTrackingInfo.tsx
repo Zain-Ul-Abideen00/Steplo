@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ExternalLink, Truck, Package, Clock } from "lucide-react";
+import { ExternalLink, Truck, Package, Clock, PackageSearch } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Separator } from "@/components/ui/separator";
 import { formatPrice } from "@/lib/utils";
@@ -8,6 +8,7 @@ interface OrderTrackingInfoProps {
   trackingNumber?: string | null;
   carrier?: string | null;
   labelUrl?: string | null;
+  trackingUrl?: string | null;
   shippingDetails?: {
     provider: string;
     service: string;
@@ -20,6 +21,7 @@ export function OrderTrackingInfo({
   trackingNumber,
   carrier,
   labelUrl,
+  trackingUrl,
   shippingDetails,
 }: OrderTrackingInfoProps) {
   if (!trackingNumber && !carrier && !labelUrl && !shippingDetails) return null;
@@ -115,27 +117,25 @@ export function OrderTrackingInfo({
       </div>
 
       {/* Tracking Link - if you want to add a tracking URL later */}
-      {trackingNumber && (
+      {trackingUrl && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="pt-4"
+          className="pt-4 flex flex-col items-center"
         >
           <Separator className="mb-4" />
+          {trackingUrl && (
           <Button
             variant="outline"
-            className="w-full"
-            onClick={() => {
-              // Add tracking URL logic here
-              window.open(
-                `https://${shippingDetails?.provider?.toLowerCase() || carrier?.toLowerCase()}.com/tracking/${trackingNumber}`,
-                "_blank"
-              );
-            }}
+            size="lg"
+            onClick={() => window.open(trackingUrl, "_blank")}
+            className="flex items-center gap-2"
           >
+            <PackageSearch className="h-5 w-5" />
             Track Package
           </Button>
+        )}
         </motion.div>
       )}
     </motion.div>

@@ -11,12 +11,12 @@ import {
 import { ProductCard } from "./ProductCard";
 import { getProducts } from "@/lib/sanity.queries";
 import { Product } from "@/types/product";
-import { ProductCardSkeleton } from "./ProductCardSkeleton";
 import { Button } from "../ui/Button";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Loading } from "../ui/loading";
 
 interface RelatedProductsProps {
   currentProduct?: Product;
@@ -80,9 +80,9 @@ export function RelatedProducts({
         setIsLoading(true);
       }
       setError(null);
-      
+
       const allProducts = await getProducts();
-      let filteredProducts = allProducts.filter((p: Product) => 
+      let filteredProducts = allProducts.filter((p: Product) =>
         currentProduct ? p._id !== currentProduct._id : true
       );
 
@@ -90,7 +90,7 @@ export function RelatedProducts({
         const categoryProducts = filteredProducts.filter((product: Product) =>
           product.category.toLowerCase().includes(category.toLowerCase())
         );
-        
+
         if (categoryProducts.length >= limit) {
           filteredProducts = categoryProducts;
         } else {
@@ -99,7 +99,7 @@ export function RelatedProducts({
             .filter((p: Product) => !categoryProducts.includes(p))
             .sort(() => 0.5 - Math.random())
             .slice(0, remainingCount);
-          
+
           filteredProducts = [...categoryProducts, ...otherProducts];
         }
       }
@@ -147,7 +147,7 @@ export function RelatedProducts({
     >
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
@@ -192,7 +192,7 @@ export function RelatedProducts({
               className="text-center py-12"
             >
               <p className="text-red-500 mb-4">{error}</p>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => fetchRelatedProducts()}
                 className="rounded-full"
@@ -217,7 +217,7 @@ export function RelatedProducts({
                           key={index}
                           className="pl-3 sm:pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
                         >
-                          <ProductCardSkeleton />
+                          <Loading variant="productCard" />
                         </CarouselItem>
                       ))
                   : products.map((product, index) => (

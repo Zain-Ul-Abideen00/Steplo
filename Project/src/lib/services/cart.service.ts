@@ -1,6 +1,5 @@
 import { createClient } from "@/utils/supabase/client";
 import { CartItem} from "@/types/product";
-import { toast } from "sonner";
 
 const supabase = createClient();
 
@@ -56,15 +55,8 @@ export const cartService = {
           throw error;
         }
       }
-
-      toast.success("Added to cart", {
-        description: "Item has been added to your cart",
-      });
     } catch (error) {
       console.error("Error syncing cart:", error);
-      toast.error("Error", {
-        description: "Failed to add item to cart",
-      });
       throw error;
     }
   },

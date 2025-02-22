@@ -7,6 +7,9 @@ import { CartProvider } from "@/components/providers/CartProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import ClientLayout from "@/components/layout/ClientLayout";
 import { WishlistProvider } from "@/context/WishlistContext";
+import { RouteChangeProvider } from "@/components/layout/RouteChangeProvider";
+import { Suspense } from "react";
+import { LoadingBar } from "@/components/ui/LoadingBar";
 
 export const metadata: Metadata = {
   title: "Steplo",
@@ -21,18 +24,22 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
-          <WishlistProvider>
-            <ClientLayout>
-              <CartProvider>
-                <Header />
-                <main>{children}</main>
-                <Toaster />
-                <Footer />
-              </CartProvider>
-            </ClientLayout>
-          </WishlistProvider>
-        </AuthProvider>
+        <Suspense fallback={<LoadingBar />}>
+          <RouteChangeProvider>
+            <AuthProvider>
+              <WishlistProvider>
+              <ClientLayout>
+                <CartProvider>
+                  <Header />
+                  <main>{children}</main>
+                  <Toaster />
+                  <Footer />
+                </CartProvider>
+              </ClientLayout>
+            </WishlistProvider>
+            </AuthProvider>
+          </RouteChangeProvider>
+        </Suspense>
       </body>
     </html>
   );

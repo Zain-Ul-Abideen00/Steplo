@@ -30,8 +30,8 @@ export default async function ProductDetailsPage({
   return (
     <div className="container mx-auto px-5 sm:px-10 py-8">
       <ProductDetails product={product} />
-      <RelatedProducts 
-        currentProduct={product} 
+      <RelatedProducts
+        currentProduct={product}
         pageType="product"
         category={product.category}
         limit={6}

@@ -29,7 +29,6 @@ interface MobileNavProps {
 
 export const MobileNav = ({ isOpen, setIsOpen }: MobileNavProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const supabase = createClient();
   const cartItems = useCartStore((state) => state.items);
   const { user: authUser, loading: authLoading, signOut } = useAuth();
@@ -40,7 +39,6 @@ export const MobileNav = ({ isOpen, setIsOpen }: MobileNavProps) => {
         data: { user },
       } = await supabase.auth.getUser();
       setUser(user);
-      setLoading(false);
     }
 
     getUser();
@@ -54,14 +52,6 @@ export const MobileNav = ({ isOpen, setIsOpen }: MobileNavProps) => {
     return () => subscription.unsubscribe();
   }, [supabase.auth]);
 
-  // Add loading state to UI
-  if (loading || authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
   // Use user state for debugging
   console.debug("Current user state:", user);
 

@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { OrderDetails } from "@/components/member/OrderDetails";
 import { Suspense } from "react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
+import { Loading } from "@/components/ui/loading";
 
 interface PageProps {
   params: Promise<{
@@ -48,6 +48,7 @@ export default async function OrderDetailsPage({ params }: PageProps) {
         shipping_rate_id,
         carrier,
         tracking_number,
+        tracking_url,
         shipping_label_url,
         items
       `
@@ -67,7 +68,7 @@ export default async function OrderDetailsPage({ params }: PageProps) {
       <Suspense
         fallback={
           <div className="flex items-center justify-center min-h-[400px]">
-            <LoadingSpinner size="lg" />
+            <Loading variant="bounce" />
           </div>
         }
       >

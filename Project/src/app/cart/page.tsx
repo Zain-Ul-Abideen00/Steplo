@@ -8,14 +8,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { ShoppingBag } from "lucide-react";
 import { ErrorState } from "@/components/ui/error-state";
-import { CartSkeleton } from "@/components/cart/cart-skeleton";
 import { RelatedProducts } from "@/components/products/RelatedProducts";
+import { Loading } from "@/components/ui/loading";
 
 export default function CartPage() {
   const { items, isLoading, error } = useCartStore();
 
   if (isLoading) {
-    return <CartSkeleton />;
+    return <Loading variant="cartSkeleton" />;
   }
 
   if (error) {

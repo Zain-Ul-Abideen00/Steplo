@@ -2,81 +2,82 @@
 
 import Image from "next/image";
 import { Button } from "../ui/Button";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { fadeInUp, fadeIn, buttonHover } from "@/lib/animation-variants";
+import Link from "next/link";
 
 export const HeroSection = () => {
-  const router = useRouter();
-
-  const handleShopAirMax = () => {
-    router.push("/products?category=air-max");
-  };
-
-  const handleNotifyMe = () => {
-    toast.info("Coming Soon!", {
-      description: "Notification feature will be available soon. Stay tuned!",
-      duration: 3000,
-    });
-  };
-
   return (
-    <section className="w-full">
-      {/* Steplo App Banner */}
-      <div className="w-full h-auto min-h-[58px] bg-[#F5F5F5] py-3">
-        <div className="max-w-[1440px] mx-auto h-full px-4 sm:px-8">
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <h3 className="text-sm text-[#111]">Hello Steplo App</h3>
-            <p className="text-xs sm:text-sm text-[#111] mt-1 sm:mt-2 px-4">
-              Download the app to access everything Steplo. Get Your Great
-            </p>
-          </div>
-        </div>
-      </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="relative"
+    >
+      <motion.div
+        variants={fadeIn}
+        initial="initial"
+        animate="animate"
+        className="relative h-[65vh] sm:h-[85vh]"
+      >
+        <Image
+          src="/hero2 (2).jpeg"
+          alt="Hero"
+          fill
+          className="object-cover brightness-95"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
+      </motion.div>
 
-      {/* Hero Image and Content */}
-      <div className="mx-auto px-5 sm:px-10 py-6 sm:py-[58px]">
-        <div className="relative">
-          <div className="w-full rounded-lg h-[300px] sm:h-[500px] lg:h-[700px] relative overflow-hidden group">
-            <Image
-              src="/hero2 (2).jpeg"
-              alt="Steplo Air Max Pulse"
-              fill
-              sizes="100vw"
-              priority
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-          </div>
-
-          <div className="mt-6 sm:mt-8 lg:mt-12 text-center px-4">
-            <span className="text-sm sm:text-base inline-block hover:text-gray-600 cursor-pointer transition-colors">
-              First Look
-            </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-[56px] leading-tight lg:leading-[60px] mt-4 sm:mt-7">
-              Steplo Air Max Pulse
-            </h1>
-            <p className="max-w-[511px] mx-auto mt-4 sm:mt-7 text-sm sm:text-base px-4">
-              Extreme comfort. Hyper durable. Max volume. Introducing the Air
-              Max Pulse —designed to push you past your limits and help you go
-              to the max.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-1.5 mt-6 sm:mt-8 lg:mt-12">
+      <motion.div
+        variants={fadeInUp}
+        initial="initial"
+        animate="animate"
+        className="absolute inset-0 flex items-center backdrop-blur-[2px] justify-center "
+      >
+        <div className="text-center text-white max-w-4xl px-4">
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+            className="text-5xl sm:text-7xl font-bold mb-6 tracking-tight drop-shadow-2xl"
+          >
+            Step Into Style
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
+            className="text-xl sm:text-2xl mb-10 font-light drop-shadow-md"
+          >
+            Discover the latest collection of premium footwear
+          </motion.p>
+          <motion.div
+            variants={buttonHover}
+            whileHover="hover"
+            whileTap="tap"
+            className="flex gap-4 flex-wrap justify-center"
+          >
+            <Link href="/products">
               <Button
-                onClick={handleNotifyMe}
-                className="hover:scale-105 transition-transform"
+                size="lg"
+                className="bg-white/95 text-black hover:bg-white rounded-full px-8 py-6 text-lg font-medium transition-all duration-300 hover:shadow-xl"
               >
-                Notify Me
+                Shop Now
               </Button>
+            </Link>
+            <Link href="/products?category=shoes">
               <Button
-                onClick={handleShopAirMax}
-                className="hover:scale-105 transition-transform"
+                size="lg"
+                variant="outline"
+                className="bg-black/30 backdrop-blur-sm border-2 border-white/80 text-white hover:bg-black/50 hover:border-white hover:text-white rounded-full px-8 py-6 text-lg font-medium transition-all duration-300"
               >
-                Shop Air Max
+                View Collections
               </Button>
-            </div>
-          </div>
+            </Link>
+          </motion.div>
         </div>
-      </div>
-    </section>
+      </motion.div>
+    </motion.div>
   );
 };

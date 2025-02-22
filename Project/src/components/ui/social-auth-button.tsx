@@ -41,7 +41,7 @@ export function SocialAuthButton({
         <>
           <Icon className="h-4 w-4" />
           <span>
-            Continue with {provider.charAt(0).toUpperCase() + provider.slice(1)}
+            Sign in with {provider.charAt(0).toUpperCase() + provider.slice(1)}
           </span>
         </>
       )}

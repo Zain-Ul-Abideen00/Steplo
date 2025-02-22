@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { Heart } from "lucide-react";
 import { Product } from "@/types/product";
-import { toast } from "sonner";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
+import { toastService } from "@/lib/services/toast.service";
 
 interface WishlistButtonProps {
   productId: string;
@@ -22,9 +22,7 @@ export function WishlistButton({ productId, product }: WishlistButtonProps) {
     e.stopPropagation();
 
     if (!user) {
-      toast.error("Please sign in", {
-        description: "You need to be signed in to add items to your wishlist",
-      });
+      toastService.auth.signInRequired();
       return;
     }
 
@@ -32,19 +30,13 @@ export function WishlistButton({ productId, product }: WishlistButtonProps) {
     try {
       if (isInWishlist(productId)) {
         await removeFromWishlist(productId);
-        toast.success("Success", {
-          description: "Item removed from wishlist",
-        });
+        toastService.wishlist.removed(product.name);
       } else {
         await addToWishlist(productId, product);
-        toast.success("Success", {
-          description: "Item added to wishlist",
-        });
+        toastService.wishlist.added(product.name);
       }
     } catch (err) {
-      toast.error("Error", {
-        description: "Failed to update wishlist",
-      });
+      toastService.error.action("update wishlist");
       console.error(err);
     } finally {
       setLoading(false);

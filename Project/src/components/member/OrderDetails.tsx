@@ -23,9 +23,9 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatOrderId } from "@/lib/utils";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { formatPrice } from "@/lib/utils";
 import { OrderTrackingInfo } from "@/components/order/OrderTrackingInfo";
+import { Loading } from "@/components/ui/loading";
 
 interface OrderItem {
   id: string;
@@ -58,11 +58,13 @@ interface OrderDetailsProps {
       provider: string;
       service: string;
       estimated_days: number;
+      price: number
     };
     carrier?: string;
     tracking_number?: string;
     shipping_label_url?: string;
     shipping_rate_id?: string;
+    tracking_url?: string;
   };
 }
 
@@ -98,11 +100,7 @@ export function OrderDetails({ order }: OrderDetailsProps) {
   }, [order.status]);
 
   if (!order) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
+    return <Loading variant="spinner" size="lg" />;
   }
 
   const getStatusStep = () => {
@@ -301,17 +299,63 @@ export function OrderDetails({ order }: OrderDetailsProps) {
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span>{formatPrice(order.total)}</span>
+                      {formatPrice(
+                          order.items.reduce(
+                            (total, item) => total + item.price * item.quantity,
+                            0
+                          )
+                        )}
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Shipping</span>
+                      <div className="text-right">
+                        {order.shipping_details ? (
+                          <>
+                            <p>{formatPrice(order.shipping_details.price)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {order.shipping_details.provider} - {order.shipping_details.service}
+                              {order.shipping_details.estimated_days && (
+                                <span> ({order.shipping_details.estimated_days} business days)</span>
+                              )}
+                            </p>
+                          </>
+                        ) : (
+                          <span>Calculated at checkout</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Tax</span>
+                      <span>
+                        {formatPrice(
+                          order.items.reduce(
+                            (total, item) =>
+                              total + Math.round(item.price * item.quantity * 0.05),
+                            0
+                          )
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Discount</span>
                       <span>-</span>
                     </div>
                     <Separator className="my-3" />
                     <div className="flex justify-between font-medium text-lg">
                       <span>Total</span>
-                      <span>{formatPrice(order.total)}</span>
+                      <div className="text-right">
+                        <span className="text-lg font-semibold">{formatPrice(order.total)}</span>
+                        <p className="text-sm text-muted-foreground">Including taxes</p>
+                      </div>
                     </div>
+                    {order.payment_status && (
+                      <div className="mt-4 flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Payment Status</span>
+                        <Badge variant={order.payment_status === "paid" ? "success" : "default"}>
+                          {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               </Card>
@@ -405,6 +449,7 @@ export function OrderDetails({ order }: OrderDetailsProps) {
               trackingNumber={order.tracking_number}
               carrier={order.carrier}
               labelUrl={order.shipping_label_url}
+              trackingUrl={order.tracking_url}
               shippingDetails={order.shipping_details}
             />
           </div>

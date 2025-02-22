@@ -2,8 +2,7 @@
 
 import { ProductFilters } from "@/components/products/ProductFilters";
 import {
-  ProductGrid,
-  ProductGridSkeleton,
+  ProductGrid
 } from "@/components/products/ProductGrid";
 import { ProductHeader } from "@/components/products/ProductHeader";
 import { RelatedCategories } from "@/components/products/RelatedCategories";
@@ -17,6 +16,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Pagination } from "@/components/ui/pagination";
+import { Loading } from "@/components/ui/loading";
 
 const ITEMS_PER_PAGE = 9; // Number of products per page
 
@@ -112,7 +112,7 @@ export default function ProductsPage() {
         )}
         <main className={`flex-1 ${isFilterVisible ? "" : "w-full"}`}>
           {isLoading ? (
-            <ProductGridSkeleton />
+            <Loading variant="productGrid" count={9} />
           ) : (
             <>
               <ProductGrid products={paginatedProducts} />

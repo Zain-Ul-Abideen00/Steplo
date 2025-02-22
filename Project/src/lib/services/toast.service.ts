@@ -1,18 +1,20 @@
 import { toast } from "sonner";
 
+const TOAST_DURATION = 4000;
+
 export const toastService = {
   // Cart Related Toasts
   cart: {
     added: (productName: string) => {
       toast.success("Added to cart", {
         description: `${productName} has been added to your cart`,
-        duration: 3000,
+        duration: TOAST_DURATION,
       });
     },
     removed: (productName: string, onUndo?: () => void) => {
       toast.success("Item removed", {
         description: `${productName} has been removed from your cart`,
-        duration: 5000,
+        duration: TOAST_DURATION,
         action: onUndo
           ? {
               label: "Undo",
@@ -24,7 +26,7 @@ export const toastService = {
     updated: (productName: string, quantity: number, onUndo?: () => void) => {
       toast.success("Quantity updated", {
         description: `${productName} quantity updated to ${quantity}`,
-        duration: 5000,
+        duration: TOAST_DURATION,
         action: onUndo
           ? {
               label: "Undo",
@@ -40,7 +42,7 @@ export const toastService = {
     added: (productName: string, onViewWishlist?: () => void) => {
       toast.success("Added to wishlist", {
         description: `${productName} has been saved to your wishlist`,
-        duration: 5000,
+        duration: TOAST_DURATION,
         action: onViewWishlist
           ? {
               label: "View Wishlist",
@@ -52,7 +54,7 @@ export const toastService = {
     removed: (productName: string, onUndo?: () => void) => {
       toast.success("Removed from wishlist", {
         description: `${productName} has been removed from your wishlist`,
-        duration: 5000,
+        duration: TOAST_DURATION,
         action: onUndo
           ? {
               label: "Undo",
@@ -68,7 +70,7 @@ export const toastService = {
     signInRequired: (onSignIn?: () => void) => {
       toast.error("Sign in required", {
         description: "Please sign in to continue",
-        duration: 5000,
+        duration: TOAST_DURATION,
         action: onSignIn
           ? {
               label: "Sign In",
@@ -82,15 +84,14 @@ export const toastService = {
   // Generic Error Toasts
   error: {
     general: (message: string) => {
-      toast.error("Error", {
-        description: message,
-        duration: 5000,
+      toast.error(message, {
+        duration: TOAST_DURATION,
       });
     },
     action: (action: string) => {
       toast.error("Action failed", {
         description: `Failed to ${action}. Please try again.`,
-        duration: 5000,
+        duration: TOAST_DURATION,
       });
     },
   },
@@ -100,13 +101,13 @@ export const toastService = {
     general: (message: string) => {
       toast.success("Success", {
         description: message,
-        duration: 3000,
+        duration: TOAST_DURATION,
       });
     },
     action: (action: string) => {
       toast.success("Success", {
         description: `Successfully ${action}`,
-        duration: 3000,
+        duration: TOAST_DURATION,
       });
     },
   },

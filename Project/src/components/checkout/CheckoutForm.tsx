@@ -8,7 +8,6 @@ import { AddressForm } from "./AddressForm";
 import OrderSummary from "./OrderSummary";
 import { cn, formatPrice, calculateOrderTotal } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
-import { toast } from "sonner";
 import { calculateTotal } from "@/lib/cart";
 import {
   useStripe,
@@ -17,10 +16,11 @@ import {
 } from "@stripe/react-stripe-js";
 import { ShippingFormValues } from "@/lib/validations/checkout";
 import { Button } from "@/components/ui/Button";
-import { Icons } from "@/components/icons";
 import { ShippingOptions } from "./ShippingOptions";
 import { PaymentIntent } from "@stripe/stripe-js";
 import OrderSummaryContent from "./OrderSummaryContent";
+import { Icons } from "../ui/icons";
+import { toastService } from "@/lib/services/toast.service";
 
 interface CheckoutFormProps {
   isGuestMode: boolean;
@@ -114,6 +114,12 @@ export default function CheckoutForm({
         image_url: item.image,
       }));
 
+      // Ensure we have email for guest users
+      if (!user?.id && !shippingAddress?.email) {
+        toastService.error.general("Email is required for guest checkout");
+        return;
+      }
+
       const response = await fetch("/api/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -121,7 +127,6 @@ export default function CheckoutForm({
           amount,
           items: simplifiedItems,
           userId: user?.id,
-          shippingRateId: selectedRate?.id,
           email: shippingAddress?.email,
           metadata: {
             items: JSON.stringify(simplifiedItems),
@@ -133,15 +138,17 @@ export default function CheckoutForm({
               postal_code: shippingAddress?.postalCode,
               country: shippingAddress?.country,
             }),
+            guest_mode: isGuestMode,
           },
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create payment intent");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create payment intent");
       }
+
+      const data = await response.json();
 
       if (data.clientSecret) {
         setClientSecret(data.clientSecret);
@@ -149,9 +156,8 @@ export default function CheckoutForm({
       }
     } catch (error: Error | unknown) {
       console.error("Payment intent error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to initialize payment"
-      );
+      toastService.error.general(error instanceof Error ? error.message : "Failed to initialize payment");
+      setCurrentStep("review");
     }
   };
 
@@ -182,12 +188,11 @@ export default function CheckoutForm({
       setShippingRates(ratesData.rates);
       setShippingAddress(data);
 
-      // Don't automatically select and proceed
       if (ratesData.rates.length > 0) {
-        setCurrentStep("shipping"); // Stay on shipping step to let user select rate
+        setCurrentStep("shipping");
       }
     } catch (err) {
-      toast.error("Failed to calculate shipping rates");
+      toastService.error.general("Failed to calculate shipping rates");
       console.error("Shipping rate calculation error:", err);
     } finally {
       setIsCalculating(false);
@@ -223,7 +228,7 @@ export default function CheckoutForm({
   const handlePaymentSuccess = async (paymentIntent: PaymentIntent) => {
     try {
       setIsProcessing(true);
-      setIsPaymentComplete(true); // Set flag before clearing cart
+      setIsPaymentComplete(true);
 
       // Create shipping label first
       const selectedRateId = selectedRate?.id;
@@ -251,7 +256,6 @@ export default function CheckoutForm({
 
       // Create order with shipping details
       const { data: order, error: orderError } = await supabase
-
         .from("orders")
         .insert({
           user_id: user?.id || null,
@@ -278,6 +282,7 @@ export default function CheckoutForm({
           shipping_rate_id: selectedRate?.id,
           carrier: selectedRate?.provider,
           tracking_number: shippingTransaction?.trackingNumber || null,
+          tracking_url: shippingTransaction?.trackingUrlProvider || null,
           shipping_label_url: shippingTransaction?.labelUrl || null,
           email: user?.email || shippingAddress.email,
           guest_mode: isGuestMode,
@@ -285,56 +290,59 @@ export default function CheckoutForm({
         .select()
         .single();
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error("Order creation error:", orderError);
+        throw orderError;
+      }
 
       // Create shipment record with tracking details
-      const { error: shipmentError } = await supabase.from("shipments").insert({
-        order_id: order.id,
-        carrier: selectedRate?.provider || "",
-        tracking_number: shippingTransaction?.trackingNumber || "PENDING",
-        rate_id: selectedRate?.id || "",
-        status: shippingTransaction ? "pre_transit" : "pending",
-        label_url: shippingTransaction?.labelUrl || null,
-        estimated_delivery: selectedRate?.estimated_days || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-
-      if (shipmentError) {
-        console.error("Shipment creation error:", shipmentError);
-        throw shipmentError;
-      }
-
-      // Create tracking record if we have tracking details
-      if (shippingTransaction?.trackingNumber) {
-        await supabase.from("shipment_tracking").insert({
-          tracking_number: shippingTransaction.trackingNumber,
-          carrier: selectedRate?.provider,
-          status: "pre_transit",
-          status_details: "Label created, waiting for pickup",
-          location: shippingAddress.city,
+      if (order) {
+        const { error: shipmentError } = await supabase.from("shipments").insert({
+          order_id: order.id,
+          carrier: selectedRate?.provider || "",
+          tracking_number: shippingTransaction?.trackingNumber || "PENDING",
+          rate_id: selectedRate?.id || "",
+          status: shippingTransaction ? "pre_transit" : "pending",
+          tracking_url: shippingTransaction?.trackingUrlProvider || null,
+          label_url: shippingTransaction?.labelUrl || null,
+          estimated_delivery: selectedRate?.estimated_days || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
-      }
 
-      // Redirect and clear cart
-      await router.push(`/checkout/success?orderId=${order.id}`);
-
-      setTimeout(async () => {
-        try {
-          if (user?.id) {
-            await supabase.from("cart_items").delete().eq("user_id", user.id);
-          }
-          clearCart();
-          toast.success("Order placed successfully!");
-        } catch (error) {
-          console.error("Failed to clear cart:", error);
+        if (shipmentError) {
+          console.error("Shipment creation error:", shipmentError);
         }
-      }, 2000);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Order creation error:", error);
-        toast.error("Payment successful but order creation failed");
+
+        // Create tracking record if we have tracking details
+        if (shippingTransaction?.trackingNumber) {
+          await supabase.from("shipment_tracking").insert({
+            tracking_number: shippingTransaction.trackingNumber,
+            carrier: selectedRate?.provider,
+            status: "pre_transit",
+            status_details: "Label created, waiting for pickup",
+            location: shippingAddress.city,
+          });
+        }
+
+        // Redirect and clear cart
+        await router.push(`/checkout/success?orderId=${order.id}`);
+
+        setTimeout(async () => {
+          try {
+            if (user?.id) {
+              await supabase.from("cart_items").delete().eq("user_id", user.id);
+            }
+            clearCart();
+            toastService.success.general("Order placed successfully!");
+          } catch (error) {
+            console.error("Failed to clear cart:", error);
+          }
+        }, 2000);
       }
+    } catch (error) {
+      console.error("Order creation error:", error);
+      toastService.error.general("Payment successful but order creation failed. Our team will contact you shortly.");
       setIsProcessing(false);
       setIsPaymentComplete(false);
     }
@@ -343,7 +351,7 @@ export default function CheckoutForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements || !clientSecret) {
-      toast.error("Payment system not ready");
+      toastService.error.general("Payment system not ready");
       return;
     }
 
@@ -371,7 +379,7 @@ export default function CheckoutForm({
       }
     } catch (error: unknown) {
       console.error("Payment error:", error);
-      toast.error(error instanceof Error ? error.message : "Payment failed");
+      toastService.error.general(error instanceof Error ? error.message : "Payment failed");
     } finally {
       setIsLoading(false);
     }
@@ -448,7 +456,7 @@ export default function CheckoutForm({
                 ) : (
                   shippingRates.length > 0 && (
                     <>
-                      <h3 className="font-semibold mb-4">
+                      <h3 className="font-semibold text-lg my-4">
                         Select Shipping Method
                       </h3>
                       <ShippingOptions
@@ -459,7 +467,7 @@ export default function CheckoutForm({
                       <Button
                         onClick={handleContinueToReview}
                         disabled={!selectedRate}
-                        className="w-full"
+                        className="w-full mt-4"
                       >
                         Continue to Review
                       </Button>

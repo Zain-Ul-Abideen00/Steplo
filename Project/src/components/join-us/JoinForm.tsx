@@ -22,12 +22,14 @@ import zxcvbn from "zxcvbn";
 import { PasswordInput } from "@/components/ui/password-input";
 import { SocialAuthButton } from "@/components/ui/social-auth-button";
 import { useAuth } from "@/context/AuthContext";
+import { Loading } from "@/components/ui/loading";
 
 
 export default function JoinForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { signInWithGoogle } = useAuth();
 
   const form = useForm<SignupFormData>({
@@ -87,7 +89,7 @@ export default function JoinForm() {
   };
 
   async function onSubmit(data: SignupFormData) {
-    setLoading(true);
+    setFormLoading(true);
     setError(null);
 
     try {
@@ -111,9 +113,27 @@ export default function JoinForm() {
       setError("An error occurred during signup");
       console.error("Form submission error:", err);
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   }
+
+  const handleGoogleSignIn = async () => {
+    if (googleLoading) return; // Prevent multiple clicks
+
+    setGoogleLoading(true);
+    try {
+      // Add a small delay to ensure loading state is visible
+      await Promise.all([
+        signInWithGoogle(),
+        new Promise(resolve => setTimeout(resolve, 500))
+      ]);
+    } catch (err) {
+      setError("An error occurred during signup");
+      console.error("Form submission error:", err);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   return (
     <Form {...form}>
@@ -127,8 +147,8 @@ export default function JoinForm() {
         <div className="space-y-4">
           <SocialAuthButton
             provider="google"
-            onClick={() => signInWithGoogle()}
-            isLoading={loading}
+            onClick={handleGoogleSignIn}
+            isLoading={googleLoading}
           />
 
           <div className="relative">
@@ -152,7 +172,7 @@ export default function JoinForm() {
                 <Input
                   placeholder="Full Name"
                   {...field}
-                  disabled={loading}
+                  disabled={formLoading}
                   className={`
                     ${dirtyFields.fullName && !errors.fullName && "border-green-500"}
                     ${errors.fullName && "border-red-500"}
@@ -174,7 +194,7 @@ export default function JoinForm() {
                   type="email"
                   placeholder="Email address"
                   {...field}
-                  disabled={loading}
+                  disabled={formLoading}
                   className={`
                     ${dirtyFields.email && !errors.email && "border-green-500"}
                     ${errors.email && "border-red-500"}
@@ -195,7 +215,7 @@ export default function JoinForm() {
                 <PasswordInput
                   placeholder="Password"
                   {...field}
-                  disabled={loading}
+                  disabled={formLoading}
                   autoComplete="new-password"
                 />
               </FormControl>
@@ -248,7 +268,7 @@ export default function JoinForm() {
                   type="date"
                   placeholder="Date of Birth"
                   {...field}
-                  disabled={loading}
+                  disabled={formLoading}
                   className={`
                     ${dirtyFields.dateOfBirth && !errors.dateOfBirth && "border-green-500"}
                     ${errors.dateOfBirth && "border-red-500"}
@@ -269,7 +289,7 @@ export default function JoinForm() {
                 <Input
                   placeholder="Country"
                   {...field}
-                  disabled={loading}
+                  disabled={formLoading}
                   className={`
                     ${dirtyFields.country && !errors.country && "border-green-500"}
                     ${errors.country && "border-red-500"}
@@ -287,9 +307,16 @@ export default function JoinForm() {
         <Button
           type="submit"
           className="w-full bg-black text-white hover:bg-gray-800 disabled:opacity-50"
-          disabled={loading || !isValid}
+          disabled={formLoading || !isValid}
         >
-          {loading ? "Creating account..." : "Join Us"}
+          {formLoading ? (
+            <div className="flex items-center justify-center gap-2">
+              <Loading variant="spinner" size="default" />
+              <span>Creating account...</span>
+            </div>
+          ) : (
+            "Join Us"
+          )}
         </Button>
 
         <p className="text-center text-sm">

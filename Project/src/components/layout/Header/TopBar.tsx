@@ -27,7 +27,7 @@ export const TopBar = () => {
       <div className="mx-auto px-5 sm:px-10 h-full flex items-center justify-between">
         {/* Left Side - Jordan Logo */}
         <div className="flex items-center gap-4">
-          <Link href="/jordan" className="hover:opacity-75">
+          <Link href="/" className="hover:opacity-75">
             <Image
               src="/jordan.svg"
               alt="Jordan"

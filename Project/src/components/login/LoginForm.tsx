@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { Loading } from "@/components/ui/loading";
 import { PasswordInput } from "@/components/ui/password-input";
 import { SocialAuthButton } from "@/components/ui/social-auth-button";
 
@@ -31,7 +31,8 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   // Get message from URL query parameter
   useEffect(() => {
@@ -59,24 +60,42 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
     formState: { isValid, errors, dirtyFields },
   } = form;
 
-  async function onSubmit(data: LoginFormData) {
-    setLoading(true);
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailLoading(true);
     setError(null);
 
     try {
-      await signIn(data.email, data.password);
-      // The redirect will be handled by the useEffect above
+      await signIn(form.getValues("email"), form.getValues("password"));
     } catch (err) {
       setError("An error occurred during login");
       console.error("Login error:", err);
     } finally {
-      setLoading(false);
+      setEmailLoading(false);
     }
-  }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (googleLoading) return; // Prevent multiple clicks
+
+    setGoogleLoading(true);
+    try {
+      // Add a small delay to ensure loading state is visible
+      await Promise.all([
+        signInWithGoogle(),
+        new Promise(resolve => setTimeout(resolve, 500))
+      ]);
+    } catch (err) {
+      setError("An error occurred during login");
+      console.error("Login error:", err);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleEmailSignIn} className="space-y-6">
         {message && (
           <div className="p-3 bg-green-100 text-green-700 rounded-md text-sm">
             {message}
@@ -92,8 +111,8 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
         <div className="space-y-4">
           <SocialAuthButton
             provider="google"
-            onClick={() => signInWithGoogle()}
-            isLoading={loading}
+            onClick={handleGoogleSignIn}
+            isLoading={googleLoading}
           />
 
           <div className="relative">
@@ -118,7 +137,7 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
                   type="email"
                   placeholder="Email address"
                   {...field}
-                  disabled={loading}
+                  disabled={emailLoading}
                   className={`
                     ${dirtyFields.email && !errors.email && "border-green-500"}
                     ${errors.email && "border-red-500"}
@@ -139,7 +158,7 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
                 <PasswordInput
                   placeholder="Password"
                   {...field}
-                  disabled={loading}
+                  disabled={emailLoading}
                   className={`
                     ${dirtyFields.password && !errors.password && "border-green-500"}
                     ${errors.password && "border-red-500"}
@@ -166,11 +185,11 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
         <Button
           type="submit"
           className="w-full bg-black text-white hover:bg-gray-800 disabled:opacity-50 h-12"
-          disabled={loading || !isValid}
+          disabled={emailLoading || !isValid}
         >
-          {loading ? (
-            <div className="flex items-center justify-center">
-              <LoadingSpinner />
+          {emailLoading ? (
+            <div className="flex items-center justify-center gap-2">
+              <Loading variant="spinner" size="default" />
               <span>Signing in...</span>
             </div>
           ) : (

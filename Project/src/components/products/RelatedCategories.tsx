@@ -42,4 +42,4 @@ export function RelatedCategories() {
       </div>
     </section>
   )
-} 
+}
