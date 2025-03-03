@@ -76,7 +76,7 @@ export default function CartSummary() {
       >
         <Link href="/checkout">
           <Button className="w-full rounded-full h-[50px] sm:h-[60px]">
-            Checkout
+            Proceed to Checkout
           </Button>
         </Link>
       </motion.div>
